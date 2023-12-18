@@ -67,16 +67,77 @@ class ProductController extends Controller
         Cart::destroy($id);
         return redirect('cartlist');
     }
-    function orderNow()
-    {
-        $userId=Session::get('user')['id'];
-        $total= $products= DB::table('cart')
-         ->join('products','cart.product_id','=','products.id')
-         ->where('cart.user_id',$userId)
-         ->sum('products.price');
+    // function orderNow(Request $request)
+    // {
+    //     $userId = null;
+
+    //     if (Session::has('user') && !empty(Session::get('user')['id'])) {
+    //         $userId = Session::get('user')['id'];
+    //     }
+
+    //     if ($userId) {
+    //         $total = $request->price; 
+    //         $productDetails = [
+    //             'product_id' => $request->product_id,
+    //             'name' => $request->name,
+    //             'price' => $request->price,
+    //             'description' => $request->description,
+    //             'category' => $request->category,
+    //         ];
+
+    //         return view('ordernow', ['total' => $total, 'productDetails' => $productDetails]);
+    //     } else {
+    //         // Handle the case when $userId is null
+    //         return redirect('/login'); // or take any other appropriate action
+    //     }
+    // }
+    // function orderNow()
+    // {
+    //     $userId=Session::get('user')['id'];
+    //     $total= $products= DB::table('cart')
+    //      ->join('products','cart.product_id','=','products.id')
+    //      ->where('cart.user_id',$userId)
+    //      ->sum('products.price');
  
-         return view('ordernow',['total'=>$total]);
+    //      return view('ordernow',['total'=>$total]);
+    // }
+    public function orderNow(Request $request)
+    {
+        $userId = null;
+    
+        if (Session::has('user') && !empty(Session::get('user')['id'])) {
+            $userId = Session::get('user')['id'];
+        }
+    
+        $total = 0;
+        $products = [];
+    
+        if ($request->has('product_id')) {
+            // Case: User clicked "Add to Cart"
+            $product = Product::find($request->product_id);
+            $total = $product->price;
+            $products[] = [
+                'product_id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'description' => $product->description,
+                'category' => $product->category,
+            ];
+        } elseif ($userId) {
+            // Case: User clicked "Buy Now" from the Cart
+            $products = DB::table('cart')
+                ->join('products', 'cart.product_id', '=', 'products.id')
+                ->where('cart.user_id', $userId)
+                ->select('products.*', 'cart.id as cart_id')
+                ->get();
+    
+            $total = $products->sum('price');
+        }
+    
+        return view('ordernow', ['total' => $total, 'productDetails' => $products]);
     }
+    
+
     function orderPlace(Request $req)
     {
         $userId=Session::get('user')['id'];
@@ -100,12 +161,22 @@ class ProductController extends Controller
     }
     function myOrders()
     {
-        $userId=Session::get('user')['id'];
-        $orders= DB::table('orders')
-         ->join('products','orders.product_id','=','products.id')
-         ->where('orders.user_id',$userId)
-         ->get();
- 
-         return view('myorders',['orders'=>$orders]);
+        $userId = null;
+
+        if (Session::has('user') && !empty(Session::get('user')['id'])) {
+            $userId = Session::get('user')['id'];
+        }
+
+        if ($userId) {
+            $orders = DB::table('orders')
+                ->join('products', 'orders.product_id', '=', 'products.id')
+                ->where('orders.user_id', $userId)
+                ->get();
+
+            return view('myorders', ['orders' => $orders]);
+        } else {
+            // Handle the case when $userId is null
+            return redirect('/login'); // or take any other appropriate action
+        }
     }
 }
