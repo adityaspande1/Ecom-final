@@ -27,15 +27,16 @@
             <form action="/orderplace" method="POST" >
               @csrf
                 <div class="form-group">
-                  <textarea name="address" placeholder="enter your address" class="form-control" ></textarea>
+                  <textarea name="address" placeholder="enter your address" class="form-control" required></textarea>
                 </div>
                 <div class="form-group">
                   <label for="pwd">Payment Method</label> <br> <br>
-                  <input type="radio" value="cash" name="payment"> <span>online payment</span> <br> <br>
+                  <input type="radio" value="cash" name="payment" required> <span>online payment</span> <br> <br>
                   
                 </div>
                 <button type="submit" class="btn btn-success">Order Now</button>
               </form>
+              
           </div>
      </div>
 </div>
